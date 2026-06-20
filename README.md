@@ -15,6 +15,9 @@ A principal estrela do show é o algoritmo de **Busca em Largura (BFS)** modific
 - ⏱️ **Roteamento por baixa latência:** O tráfego de mensagens prioriza os cabos mais rápidos, usando uma otimização com *Insertion Sort* na exploração dos nós da BFS.
 - 🌳 **Árvore de predecessores:** Rastreamento completo de como a mensagem viajou (quem enviou para quem) e quantos saltos a mensagem precisou dar.
 - 🎨 **Terminal animado e colorido:** As atualizações acontecem em tempo real no terminal, utilizando cores ANSI e pequenos "delays" (`usleep`) para criar uma sensação visual de fluxo de rede.
+- 🔀 **Broadcast via DFS:** Exploração profunda da rede simulando sincronização de estado.
+- ✂️ **Simulação de falhas:** Desconexão dinâmica de computadores (queda de link) para testar a resiliência da topologia.
+- 🧩 **Verificação de integridade:** Detecção de componentes conexos isolados utilizando o algoritmo *Union-Find*.
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -26,6 +29,7 @@ A principal estrela do show é o algoritmo de **Busca em Largura (BFS)** modific
   - BFS (Busca em Largura) customizada
   - DFS (Busca em Profundidade)
   - Insertion Sort (Ordenação de prioridade)
+  - Union-Find (Detecção de componentes conexos)
 
 ## 🚀 Como executar
 
@@ -62,6 +66,7 @@ A principal estrela do show é o algoritmo de **Busca em Largura (BFS)** modific
 * `grafo.c`: O coração lógico! Implementação da criação do grafo, impressão colorida, e dos algoritmos de busca (BFS e DFS).
 * `main.c`: Ponto de entrada do sistema. Monta a topologia da rede, inicializa os dados e aciona as simulações.
 * `Makefile`: Automação da compilação do código C.
+* `docs/index.html`: Documentação web interativa detalhando estruturas e algoritmos do projeto.
 
 ---
 *Feito com 💻 e muita lógica de Grafos!*
