@@ -1,0 +1,10 @@
+# Arquivos objetos compilados
+*.o
+
+# Arquivos executáveis
+rede_p2p
+
+# Arquivos de editores/SO
+.vscode/
+.idea/
+.DS_Store
