@@ -267,9 +267,14 @@ void dfs(Grafo *g, int id, int visitado[], int pai[], int prof[],
 /* ────────────────────────────────────────────────
    ÁRVORE DE PREDECESSORES
 ──────────────────────────────────────────────── */
-
+/* 
+ * @src: nó fonte
+ * @pai: array de predecessores
+ * @prof: array de profundidades
+ * @n: número de nós
+ */
 void imprimir_predecessores(int src, int pai[], int prof[], int n) {
-    (void)src;  /* parâmetro reservado para possível uso futuro */
+    (void)src;  /* para possível uso futuro */
     printf("\n" NEGRITO VERDE
            "╔══════════════════════════════════════════════╗\n"
            "║         ÁRVORE DE PREDECESSORES              ║\n"
@@ -280,12 +285,12 @@ void imprimir_predecessores(int src, int pai[], int prof[], int n) {
 
     for (int i = 0; i < n; i++) {
         if (prof[i] < 0) continue; /* nó não alcançado */
-        printf("  " CIANO "P%-4d" RESET, i);
-        if (pai[i] == -1)
-            printf(CINZA "%-14s" RESET, "--  (fonte)");
+        printf("  " CIANO "P%-4d" RESET, i); //mostra o nó
+        if (pai[i] == -1) //se o pai for -1, então é a raiz
+            printf(CINZA "%-14s" RESET, "--  (fonte)"); //mostra que é a raiz
         else
-            printf(VERDE "P%-13d" RESET, pai[i]);
-        printf(AMARELO "%d\n" RESET, prof[i]);
+            printf(VERDE "P%-13d" RESET, pai[i]); //mostra o pai do nó
+        printf(AMARELO "%d\n" RESET, prof[i]); //mostra a profundidade do nó
     }
     printf("\n");
 }
@@ -294,24 +299,28 @@ void imprimir_predecessores(int src, int pai[], int prof[], int n) {
    ÁRVORE GERADORA (VISUAL COM ├── / └──)
 ──────────────────────────────────────────────── */
 
-/* Imprime recursivamente a subárvore enraizada em `raiz` */
-static void imprimir_sub(Grafo *g, int raiz, int pai[], int prof[],
-                          int n, char *prefixo, int eh_ultimo) {
-    (void)eh_ultimo;  /* mantido na assinatura para legibilidade */
-
+/* Imprime recursivamente a subárvore enraizada em `raiz`
+ * @g: grafo
+ * @raiz: nó raiz
+ * @pai: array de predecessores
+ * @prof: array de profundidades
+ * @n: número de nós
+ * @prefixo: prefixo para indentação
+ */
+static void imprimir_sub(Grafo *g, int raiz, int pai[], int prof[], int n, char *prefixo) {
     /* Coleta filhos do nó raiz */
-    int filhos[MAX], nf = 0;
+    int filhos[MAX], nf = 0; //array de filhos e número de filhos
     for (int i = 0; i < n; i++)
-        if (pai[i] == raiz && i != raiz && prof[i] == prof[raiz] + 1)
-            filhos[nf++] = i;
+        if (pai[i] == raiz && i != raiz && prof[i] == prof[raiz] + 1) //se o pai for a raiz e o nó não for a raiz e a profundidade for a profundidade da raiz + 1
+            filhos[nf++] = i; //adiciona o filho ao array de filhos
 
-    for (int f = 0; f < nf; f++) {
-        int filho = filhos[f];
+    for (int f = 0; f < nf; f++) { //percorre o array de filhos
+        int filho = filhos[f]; //pega o filho
         int lat   = latencia_entre(g, raiz, filho);
-        int ultimo = (f == nf - 1);
+        int ultimo = (f == nf - 1); //verifica se é o último filho
 
-        printf("%s", prefixo);
-        printf(CINZA "%s" RESET, ultimo ? "└── " : "├── ");
+        printf("%s", prefixo); //imprime o prefixo
+        printf(CINZA "%s" RESET, ultimo ? "└── " : "├── "); //imprime o ramo
         printf(AZUL NEGRITO "P%d" RESET
                CINZA "  (salto %d, " RESET
                AMARELO "%dms" RESET CINZA ")" RESET "\n",
@@ -322,7 +331,7 @@ static void imprimir_sub(Grafo *g, int raiz, int pai[], int prof[],
         snprintf(novo_pref, sizeof(novo_pref), "%s%s",
                  prefixo, ultimo ? "    " : "│   ");
 
-        imprimir_sub(g, filho, pai, prof, n, novo_pref, ultimo);
+        imprimir_sub(g, filho, pai, prof, n, novo_pref);
     }
 }
 
@@ -335,7 +344,7 @@ void imprimir_arvore(Grafo *g, int src, int pai[], int prof[]) {
     printf(CIANO NEGRITO "P%d" RESET VERDE "  ★ fonte\n" RESET, src);
 
     char prefixo[256] = "";
-    imprimir_sub(g, src, pai, prof, g->total, prefixo, 1);
+    imprimir_sub(g, src, pai, prof, g->total, prefixo); //chama a função recursiva que imprime a árvore
     printf("\n");
 }
 
@@ -343,16 +352,40 @@ void imprimir_arvore(Grafo *g, int src, int pai[], int prof[]) {
    UNION-FIND
 ──────────────────────────────────────────────── */
 
+/* O Union-Find é uma estrutura de dados que permite
+   verificar se dois elementos pertencem ao mesmo conjunto
+   e unir dois conjuntos.
+
+   No caso deste trabalho, é utilizado para verificar se
+   dois nós pertencem ao mesmo componente conexo.
+*/
+
+/* Inicializa a estrutura: no começo, cada nó é o "chefe supremo" de seu 
+   próprio grupo isolado (parent[i] = i) e todos têm rank (profundidade) 0.
+*/
 void uf_inicializar(int *parent, int *rank, int n) {
-    for (int i = 0; i < n; i++) { parent[i] = i; rank[i] = 0; }
+    for (int i = 0; i < n; i++) {
+        parent[i] = i;
+        rank[i] = 0;
+    }
 }
 
+/* Descobre quem é o nó "chefe supremo" (a raiz) do componente ao qual 'x' pertence.
+   Usa "compressão de caminho": ao subir na árvore para achar a raiz, ele já
+   atualiza todos os nós no caminho para apontarem diretamente para o chefe,
+   deixando as próximas buscas praticamente instantâneas.
+*/
 int uf_find(int *parent, int x) {
     if (parent[x] != x)
         parent[x] = uf_find(parent, parent[x]); /* compressão de caminho */
     return parent[x];
 }
 
+/* Une os componentes dos nós 'a' e 'b'.
+   Ele encontra o chefe de cada um. Se forem diferentes, o grupo menor (menor rank)
+   passa a ser subordinado do grupo maior. Isso evita que a árvore cresça demais,
+   mantendo as buscas rápidas (União por Rank).
+*/
 void uf_unite(int *parent, int *rank, int a, int b) {
     int ra = uf_find(parent, a);
     int rb = uf_find(parent, b);
