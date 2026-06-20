@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação — Rede P2P com Grafos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2128;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --primary: #58a6ff;
+            --primary-glow: rgba(88, 166, 255, 0.15);
+            --green: #3fb950;
+            --green-glow: rgba(63, 185, 80, 0.15);
+            --yellow: #d29922;
+            --yellow-glow: rgba(210, 153, 34, 0.15);
+            --red: #f85149;
+            --red-glow: rgba(248, 81, 73, 0.15);
+            --purple: #bc8cff;
+            --purple-glow: rgba(188, 140, 255, 0.15);
+            --cyan: #39d3f7;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-logo h2 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .sidebar-logo p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        nav { padding: 12px 8px; flex: 1; }
+
+        .nav-group-title {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 8px 12px 4px;
+        }
+
+        nav a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            transition: all 0.15s;
+            margin-bottom: 1px;
+        }
+
+        nav a:hover, nav a.active {
+            background: var(--primary-glow);
+            color: var(--primary);
+        }
+
+        nav a .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* ── Main Content ── */
+        main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            max-width: 900px;
+            padding: 48px 48px 80px;
+        }
+
+        /* ── Hamburger ── */
+        #hamburger {
+            display: none;
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 200;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            margin-bottom: 56px;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: var(--primary-glow);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #e6edf3 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 640px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── Sections ── */
+        section {
+            margin-bottom: 56px;
+            scroll-margin-top: 24px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 1.2rem;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin-bottom: 24px;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover { border-color: #484f58; }
+
+        .card-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            gap: 12px;
+        }
+
+        .card-header-left { flex: 1; }
+
+        .card-fn-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .card-fn-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card-toggle {
+            width: 24px; height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .card.open .card-toggle { transform: rotate(90deg); color: var(--primary); border-color: var(--primary); }
+
+        .card-body {
+            display: none;
+            padding: 0 20px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .card.open .card-body { display: block; }
+
+        .card-body p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.75;
+            margin-top: 16px;
+        }
+
+        .card-body p + p { margin-top: 10px; }
+
+        /* ── Params Table ── */
+        .params-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 20px 0 8px;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .params-table th {
+            text-align: left;
+            padding: 8px 12px;
+            background: var(--surface2);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .params-table th:first-child { border-radius: 6px 0 0 0; }
+        .params-table th:last-child { border-radius: 0 6px 0 0; }
+
+        .params-table td {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: top;
+        }
+
+        .params-table td:first-child {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan);
+            white-space: nowrap;
+        }
+
+        .params-table td:nth-child(2) {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--yellow);
+            white-space: nowrap;
+        }
+
+        .params-table td:last-child {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ── Code Block ── */
+        .code-block {
+            background: #010409;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 16px;
+            font-size: 0.82rem;
+        }
+
+        .code-block-header {
+            padding: 8px 16px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-block-lang {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s;
+        }
+
+        .copy-btn:hover { color: var(--text); border-color: #484f58; }
+        .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        /* Syntax Highlight */
+        .kw { color: #ff7b72; }
+        .ty { color: #ffa657; }
+        .fn { color: #d2a8ff; }
+        .st { color: #a5d6ff; }
+        .num { color: #79c0ff; }
+        .cm { color: #8b949e; font-style: italic; }
+        .op { color: #ff7b72; }
+
+        /* ── Struct Cards ── */
+        .struct-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .struct-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            transition: border-color 0.2s;
+        }
+
+        .struct-card:hover { border-color: #484f58; }
+
+        .struct-card-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--yellow);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .struct-card-name .badge-struct {
+            font-size: 0.65rem;
+            background: var(--yellow-glow);
+            border: 1px solid var(--yellow);
+            color: var(--yellow);
+            padding: 1px 7px;
+            border-radius: 4px;
+        }
+
+        .struct-field {
+            display: flex;
+            gap: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .struct-field:last-child { border-bottom: none; }
+
+        .struct-field-type {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan);
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .struct-field-name {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+        }
+
+        .struct-field-desc {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 1px;
+        }
+
+        /* ── Alert Boxes ── */
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+
+        .alert-info { background: var(--primary-glow); border: 1px solid rgba(88,166,255,0.3); }
+        .alert-info .alert-icon, .alert-info p { color: #79c0ff; }
+
+        .alert-tip { background: var(--green-glow); border: 1px solid rgba(63,185,80,0.3); }
+        .alert-tip .alert-icon, .alert-tip p { color: var(--green); }
+
+        .alert-warn { background: var(--yellow-glow); border: 1px solid rgba(210,153,34,0.3); }
+        .alert-warn .alert-icon, .alert-warn p { color: var(--yellow); }
+
+        /* ── Flow Diagram ── */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 48px;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .flow-num {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .flow-content { padding-top: 8px; }
+        .flow-content strong { color: var(--text); font-size: 0.9rem; display: block; margin-bottom: 2px; }
+        .flow-content p { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
+
+        /* ── Complexity Badges ── */
+        .complexity-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .complexity-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+        }
+
+        .complexity-badge.time { background: var(--purple-glow); border: 1px solid var(--purple); color: var(--purple); }
+        .complexity-badge.space { background: var(--primary-glow); border: 1px solid var(--primary); color: var(--primary); }
+        .complexity-badge span { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+        /* ── Menu Overview ── */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .menu-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .menu-item:hover { border-color: #484f58; }
+
+        .menu-key {
+            width: 28px; height: 28px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .menu-desc strong { font-size: 0.82rem; color: var(--text); display: block; margin-bottom: 2px; }
+        .menu-desc p { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* ── Topology Viz ── */
+        #topo-canvas { width: 100%; display: block; }
+        .canvas-container {
+            background: #010409;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        /* ── Back to top ── */
+        #back-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 42px; height: 42px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        #back-to-top.visible { opacity: 1; pointer-events: auto; }
+        #back-to-top:hover { color: var(--primary); border-color: var(--primary); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            main { padding: 24px 20px 60px; }
+            .hero h1 { font-size: 1.8rem; }
+            .struct-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 720px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); box-shadow: 0 0 0 100vw rgba(0,0,0,0.5); }
+            main { margin-left: 0; }
+            #hamburger { display: flex; align-items: center; justify-content: center; }
+            .menu-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside id="sidebar">
+    <div class="sidebar-logo">
+        <h2>🌐 Rede P2P</h2>
+        <p>Documentação técnica — Est. Dados II</p>
+    </div>
+    <nav>
+        <div class="nav-group-title">Visão Geral</div>
+        <a href="#intro"><span class="dot"></span> Introdução</a>
+        <a href="#topologia"><span class="dot"></span> Topologia da Rede</a>
+
+        <div class="nav-group-title">Estruturas de Dados</div>
+        <a href="#structs"><span class="dot"></span> Tipos Definidos</a>
+
+        <div class="nav-group-title">Módulo — Grafo</div>
+        <a href="#criar_grafo"><span class="dot"></span> criar_grafo</a>
+        <a href="#adicionar_aresta"><span class="dot"></span> adicionar_aresta</a>
+        <a href="#remover_aresta"><span class="dot"></span> remover_aresta</a>
+        <a href="#imprimir_grafo"><span class="dot"></span> imprimir_grafo</a>
+        <a href="#liberar_grafo"><span class="dot"></span> liberar_grafo</a>
+
+        <div class="nav-group-title">Módulo — Fila</div>
+        <a href="#fila"><span class="dot"></span> Operações da Fila</a>
+
+        <div class="nav-group-title">Módulo — Busca</div>
+        <a href="#bfs"><span class="dot"></span> bfs</a>
+        <a href="#dfs"><span class="dot"></span> dfs</a>
+
+        <div class="nav-group-title">Módulo — Árvore</div>
+        <a href="#imprimir_predecessores"><span class="dot"></span> imprimir_predecessores</a>
+        <a href="#imprimir_arvore"><span class="dot"></span> imprimir_arvore</a>
+
+        <div class="nav-group-title">Módulo — Union-Find</div>
+        <a href="#uf"><span class="dot"></span> uf_inicializar</a>
+        <a href="#uf"><span class="dot"></span> uf_find</a>
+        <a href="#uf"><span class="dot"></span> uf_unite</a>
+        <a href="#detectar"><span class="dot"></span> detectar_componentes</a>
+
+        <div class="nav-group-title">Módulo — Main</div>
+        <a href="#menu"><span class="dot"></span> Menu Interativo</a>
+    </nav>
+</aside>
+
+<button id="hamburger" onclick="toggleSidebar()">☰</button>
+
+<!-- Main -->
+<main>
+
+    <!-- Hero -->
+    <section id="intro" class="hero">
+        <div class="badge">Estruturas de Dados II — Seminário</div>
+        <h1>Simulador de Rede P2P<br>com Grafos em C</h1>
+        <p>Documentação técnica completa cobrindo todas as estruturas de dados, funções e algoritmos implementados para simular o roteamento de mensagens em uma rede peer-to-peer, incluindo busca em largura (BFS), busca em profundidade (DFS) e detecção de componentes conexos via Union-Find.</p>
+        <div class="meta-tags">
+            <span class="tag">C11 / POSIX</span>
+            <span class="tag">Grafos</span>
+            <span class="tag">BFS & DFS</span>
+            <span class="tag">Union-Find</span>
+            <span class="tag">Lista Encadeada</span>
+            <span class="tag">Fila Manual</span>
+        </div>
+    </section>
+
+    <!-- Topologia -->
+    <section id="topologia">
+        <h2 class="section-title"><span class="icon">🔗</span> Topologia da rede</h2>
+        <div class="section-divider"></div>
+        <p class="section-desc">A rede padrão inicializada pelo programa conta com 7 computadores (P0 a P6) interconectados com diferentes latências. Abaixo, uma visualização interativa da topologia — clique e arraste os nós.</p>
+        <div class="canvas-container">
+            <canvas id="topo-canvas" height="340"></canvas>
+        </div>
+        <div class="alert alert-tip">
+            <span class="alert-icon">💡</span>
+            <p>As latências representam o tempo em ms que uma mensagem leva de um computador ao outro. A BFS sempre priorizará os links com menor latência.</p>
+        </div>
+    </section>
+
+    <!-- Estruturas -->
+    <section id="structs">
+        <h2 class="section-title"><span class="icon">🧱</span> Estruturas de dados</h2>
+        <div class="section-divider"></div>
+        <p class="section-desc">Definidas no arquivo <code style="font-family: monospace; color: var(--cyan)">grafo.h</code>, essas estruturas formam a base do programa. Cada uma representa um conceito do domínio da rede P2P.</p>
+        <div class="struct-grid">
+
+            <div class="struct-card">
+                <div class="struct-card-name">Aresta <span class="badge-struct">struct</span></div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">destino</div>
+                        <div class="struct-field-desc">ID do nó de destino do cabo</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">latencia</div>
+                        <div class="struct-field-desc">Tempo de transmissão em ms</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">Aresta *</div>
+                        <div class="struct-field-name">proxima</div>
+                        <div class="struct-field-desc">Próximo elo da lista encadeada de vizinhos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="struct-card">
+                <div class="struct-card-name">No <span class="badge-struct">struct</span></div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">id</div>
+                        <div class="struct-field-desc">Identificador único do computador</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">Aresta *</div>
+                        <div class="struct-field-name">vizinhos</div>
+                        <div class="struct-field-desc">Ponteiro para a lista encadeada de arestas</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="struct-card">
+                <div class="struct-card-name">Grafo <span class="badge-struct">struct</span></div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">No **</div>
+                        <div class="struct-field-name">nos</div>
+                        <div class="struct-field-desc">Array de ponteiros para os nós da rede</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">total</div>
+                        <div class="struct-field-desc">Quantidade total de computadores</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="struct-card">
+                <div class="struct-card-name">Mensagem <span class="badge-struct">struct</span></div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">origem</div>
+                        <div class="struct-field-desc">ID do nó que disparou a mensagem</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">char[20]</div>
+                        <div class="struct-field-name">tipo</div>
+                        <div class="struct-field-desc">Tipo do pacote (ex: "UPDATE_POS")</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">float[3]</div>
+                        <div class="struct-field-name">dados</div>
+                        <div class="struct-field-desc">Payload: coordenadas x, y, z</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">timestamp</div>
+                        <div class="struct-field-desc">Identificador temporal do pacote</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="struct-card">
+                <div class="struct-card-name">Fila <span class="badge-struct">struct</span></div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int[MAX]</div>
+                        <div class="struct-field-name">dados</div>
+                        <div class="struct-field-desc">Array que armazena os IDs dos nós na fila</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">inicio</div>
+                        <div class="struct-field-desc">Índice do próximo elemento a sair (FIFO)</div>
+                    </div>
+                </div>
+                <div class="struct-field">
+                    <div>
+                        <div class="struct-field-type">int</div>
+                        <div class="struct-field-name">fim</div>
+                        <div class="struct-field-desc">Índice onde o próximo elemento será inserido</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Módulo Grafo -->
+    <section id="criar_grafo">
+        <h2 class="section-title"><span class="icon">⚙️</span> Módulo — Grafo</h2>
+        <div class="section-divider"></div>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">Grafo *criar_grafo(int n)</div>
+                    <div class="card-fn-desc">Aloca e inicializa o grafo com <code>n</code> nós vazios na memória.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Usa <code>malloc</code> para alocar a estrutura principal do grafo, o array de ponteiros para os nós, e cada <code>No</code> individualmente. Cada nó começa com sua lista de vizinhos apontando para <code>NULL</code> (sem conexões). Caso qualquer alocação falhe, o programa encerra com <code>perror</code> e <code>exit(1)</code>.</p>
+                <div class="params-title">Parâmetros</div>
+                <table class="params-table">
+                    <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>n</td><td>int</td><td>Número de nós (computadores) que o grafo terá</td></tr>
+                </table>
+                <div class="params-title">Retorno</div>
+                <table class="params-table">
+                    <tr><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>Grafo *</td><td>Ponteiro para o grafo alocado e inicializado</td></tr>
+                </table>
+                <div class="code-block">
+                    <div class="code-block-header">
+                        <span class="code-block-lang">c</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    </div>
+                    <pre><span class="ty">Grafo</span> *<span class="fn">criar_grafo</span>(<span class="kw">int</span> n) {
+    <span class="ty">Grafo</span> *g = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="ty">Grafo</span>));
+    g-&gt;total = n;
+    g-&gt;nos   = <span class="fn">malloc</span>(n * <span class="kw">sizeof</span>(<span class="ty">No</span> *));
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+        g-&gt;nos[i]           = <span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="ty">No</span>));
+        g-&gt;nos[i]-&gt;id       = i;
+        g-&gt;nos[i]-&gt;vizinhos = <span class="num">NULL</span>;
+    }
+    <span class="kw">return</span> g;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="adicionar_aresta" class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void adicionar_aresta(Grafo *g, int a, int b, int lat)</div>
+                    <div class="card-fn-desc">Cria uma aresta bidirecional (não-dirigida) entre dois nós com latência definida.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Como o grafo modela uma rede onde a comunicação é de mão dupla (A fala com B e B fala com A), esta função chama a auxiliar estática <code>inserir_aresta_dir</code> duas vezes: uma para a direção A→B e outra para B→A.</p>
+                <p>A inserção é feita <strong>no início</strong> da lista encadeada de vizinhos do nó, sendo a operação de menor custo (O(1)) para uma lista encadeada.</p>
+                <div class="params-title">Parâmetros</div>
+                <table class="params-table">
+                    <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>g</td><td>Grafo *</td><td>O grafo onde a aresta será criada</td></tr>
+                    <tr><td>a</td><td>int</td><td>ID do primeiro nó</td></tr>
+                    <tr><td>b</td><td>int</td><td>ID do segundo nó</td></tr>
+                    <tr><td>lat</td><td>int</td><td>Latência da conexão em milissegundos</td></tr>
+                </table>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Tempo: <span>O(1)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="remover_aresta" class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void remover_aresta(Grafo *g, int a, int b)</div>
+                    <div class="card-fn-desc">Remove a conexão entre dois nós, simulando a queda de um link de rede.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Usa um <strong>ponteiro para ponteiro</strong> (<code>Aresta **atual</code>) para percorrer a lista encadeada e remover o nó sem precisar de uma variável <code>anterior</code> separada. Isso é um truque clássico e elegante em C.</p>
+                <p>Quando o nó alvo é encontrado, o ponteiro que apontava para ele é atualizado para apontar para o próximo (<code>*atual = (*atual)->proxima</code>), "costurando" a lista, e então a memória do nó removido é liberada com <code>free</code>.</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-block-lang">c</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+                    <pre><span class="cm">/* Técnica do ponteiro para ponteiro */</span>
+<span class="ty">Aresta</span> **atual = &amp;g-&gt;nos[a]-&gt;vizinhos;
+<span class="kw">while</span> (*atual) {
+    <span class="kw">if</span> ((*atual)-&gt;destino == b) {
+        <span class="ty">Aresta</span> *tmp = *atual;
+        *atual = (*atual)-&gt;proxima; <span class="cm">// costura a lista</span>
+        <span class="fn">free</span>(tmp);
+        <span class="kw">return</span>;
+    }
+    atual = &amp;(*atual)-&gt;proxima;
+}</pre>
+                </div>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Tempo: <span>O(k)</span></div>
+                    <div class="complexity-badge space">📦 Espaço: <span>O(1)</span></div>
+                </div>
+                <p style="margin-top:8px; font-size:0.78rem; color: var(--text-muted)">Onde <strong>k</strong> é o grau do nó (número de vizinhos diretos).</p>
+            </div>
+        </div>
+
+        <div id="imprimir_grafo" class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void imprimir_grafo(Grafo *g)</div>
+                    <div class="card-fn-desc">Exibe a topologia completa da rede no terminal com cores ANSI.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Itera por todos os nós do grafo (loop <code>for</code> externo) e, para cada nó, percorre a lista encadeada de arestas (loop <code>while</code> interno), imprimindo cada vizinho e sua latência. Exibe <code>(sem conexões)</code> para nós isolados. O separador <code>──▶</code> é só adicionado entre vizinhos (nunca no final da linha) através de um <code>if (a->proxima)</code>.</p>
+            </div>
+        </div>
+
+        <div id="liberar_grafo" class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void liberar_grafo(Grafo *g)</div>
+                    <div class="card-fn-desc">Libera toda a memória alocada dinamicamente pelo grafo, prevenindo memory leaks.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Para cada nó do grafo, percorre sua lista encadeada de arestas liberando cada <code>Aresta</code> individualmente. Em seguida, libera o próprio nó. Por último, libera o array de ponteiros e a struct <code>Grafo</code>. A ordem correta é de dentro para fora: aresta → nó → array → grafo.</p>
+                <div class="alert alert-warn">
+                    <span class="alert-icon">⚠️</span>
+                    <p>Não liberar a memória causaria <strong>memory leak</strong>. Como o programa roda em loop e pode criar estruturas auxiliares, a liberação correta é essencial para a saúde do processo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Módulo Fila -->
+    <section id="fila">
+        <h2 class="section-title"><span class="icon">📬</span> Módulo — Fila (FIFO)</h2>
+        <div class="section-divider"></div>
+        <p class="section-desc">Implementação manual de uma fila por array estático, utilizada internamente pela BFS para controlar a ordem de processamento dos nós. Segue a política FIFO (First-In, First-Out).</p>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">enfileirar / desenfileirar / fila_vazia</div>
+                    <div class="card-fn-desc">Operações básicas da fila manual: inserir no fim, retirar do início e checar se está vazia.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>A fila usa dois índices (<code>inicio</code> e <code>fim</code>) sobre um array fixo. <code>enfileirar</code> escreve na posição <code>fim</code> e avança o índice. <code>desenfileirar</code> lê da posição <code>inicio</code> e avança o índice. Quando <code>inicio >= fim</code>, a fila está vazia.</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-block-lang">c</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+                    <pre><span class="kw">void</span> <span class="fn">enfileirar</span>(<span class="ty">Fila</span> *f, <span class="kw">int</span> id)  { f-&gt;dados[f-&gt;fim++] = id; }
+<span class="kw">int</span>  <span class="fn">desenfileirar</span>(<span class="ty">Fila</span> *f)       { <span class="kw">return</span> f-&gt;dados[f-&gt;inicio++]; }
+<span class="kw">int</span>  <span class="fn">fila_vazia</span>(<span class="ty">Fila</span> *f)          { <span class="kw">return</span> f-&gt;inicio &gt;= f-&gt;fim; }</pre>
+                </div>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Todas: <span>O(1)</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BFS -->
+    <section id="bfs">
+        <h2 class="section-title"><span class="icon">📡</span> Módulo — BFS (Busca em Largura)</h2>
+        <div class="section-divider"></div>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void bfs(Grafo *g, int src, int pai[], int prof[], Mensagem *msg)</div>
+                    <div class="card-fn-desc">Broadcast em largura a partir de um nó de origem, priorizando links de menor latência.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Esta é a implementação central do simulador. Diferente de uma BFS tradicional (que expande vizinhos na ordem em que os encontra), esta versão usa uma etapa de <strong>ordenação por Insertion Sort</strong> antes de enfileirar os vizinhos de cada nó, garantindo que os links mais rápidos sejam processados primeiro.</p>
+                <div class="flow">
+                    <div class="flow-step">
+                        <div class="flow-num">1</div>
+                        <div class="flow-content">
+                            <strong>Inicialização</strong>
+                            <p>Marca o nó fonte como visitado, define seu predecessor como <code>-1</code> e profundidade como <code>0</code>. Enfileira-o.</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">2</div>
+                        <div class="flow-content">
+                            <strong>Loop principal</strong>
+                            <p>Enquanto a fila não estiver vazia, retira o próximo nó (<code>atual</code>) e imprime as informações de recebimento com uma pausa de <code>300ms</code> (animação).</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">3</div>
+                        <div class="flow-content">
+                            <strong>Coleta de candidatos</strong>
+                            <p>Percorre os vizinhos de <code>atual</code> e coleta os ainda não visitados em arrays temporários (<code>cand[]</code>, <code>clat[]</code>).</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">4</div>
+                        <div class="flow-content">
+                            <strong>Insertion Sort</strong>
+                            <p>Ordena os candidatos por latência crescente. Para listas pequenas (poucos vizinhos), é o algoritmo mais eficiente na prática.</p>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-num">5</div>
+                        <div class="flow-content">
+                            <strong>Enfileiramento</strong>
+                            <p>Enfileira os candidatos já ordenados, registrando o <code>pai[]</code> e <code>prof[]</code> de cada um para montar a árvore de predecessores.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="params-title">Parâmetros</div>
+                <table class="params-table">
+                    <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>g</td><td>Grafo *</td><td>O grafo sobre o qual executar a busca</td></tr>
+                    <tr><td>src</td><td>int</td><td>ID do nó fonte (origem do broadcast)</td></tr>
+                    <tr><td>pai[]</td><td>int[]</td><td>Array de saída: quem enviou a mensagem para cada nó</td></tr>
+                    <tr><td>prof[]</td><td>int[]</td><td>Array de saída: número de saltos até cada nó</td></tr>
+                    <tr><td>msg</td><td>Mensagem *</td><td>Pacote de dados a ser transmitido (pode ser NULL)</td></tr>
+                </table>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Tempo: <span>O(V + E)</span></div>
+                    <div class="complexity-badge space">📦 Espaço: <span>O(V)</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DFS -->
+    <section id="dfs">
+        <h2 class="section-title"><span class="icon">🌿</span> Módulo — DFS (Busca em Profundidade)</h2>
+        <div class="section-divider"></div>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void dfs(Grafo *g, int id, int visitado[], int pai[], int prof[], int profAtual, Mensagem *msg)</div>
+                    <div class="card-fn-desc">Broadcast em profundidade de forma recursiva, mergulhando fundo em cada ramo antes de explorar o próximo.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Implementada de forma <strong>recursiva</strong>. Cada chamada representa a "visita" a um nó. A indentação visual no terminal é proporcional à profundidade (<code>profAtual</code>), criando uma saída que se parece com a estrutura da árvore de exploração.</p>
+                <p>Para cada vizinho ainda não visitado, a DFS o marca como visitado, registra seu pai e profundidade, aguarda <code>300ms</code> e se chama recursivamente, mergulhando pelo caminho até que não haja mais caminhos a explorar naquela direção. Só então retorna e explora o próximo vizinho.</p>
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <p><strong>BFS vs DFS no contexto P2P:</strong> A BFS garante que a mensagem chegue ao maior número de nós no menor número de saltos possível. A DFS pode ser mais lenta para atingir nós distantes, mas percorre todos os ramos do grafo de forma determinística.</p>
+                </div>
+                <div class="params-title">Parâmetros</div>
+                <table class="params-table">
+                    <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>g</td><td>Grafo *</td><td>O grafo sobre o qual executar a busca</td></tr>
+                    <tr><td>id</td><td>int</td><td>ID do nó sendo visitado na chamada atual</td></tr>
+                    <tr><td>visitado[]</td><td>int[]</td><td>Array de controle para não revisitar nós</td></tr>
+                    <tr><td>pai[]</td><td>int[]</td><td>Array de saída: predecessores de cada nó</td></tr>
+                    <tr><td>prof[]</td><td>int[]</td><td>Array de saída: profundidade de cada nó</td></tr>
+                    <tr><td>profAtual</td><td>int</td><td>Nível de profundidade da chamada recursiva atual</td></tr>
+                    <tr><td>msg</td><td>Mensagem *</td><td>Pacote de dados transmitido (pode ser NULL)</td></tr>
+                </table>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Tempo: <span>O(V + E)</span></div>
+                    <div class="complexity-badge space">📦 Pilha: <span>O(V)</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Árvore -->
+    <section id="imprimir_predecessores">
+        <h2 class="section-title"><span class="icon">🌳</span> Módulo — Árvore de predecessores</h2>
+        <div class="section-divider"></div>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void imprimir_predecessores(int src, int pai[], int prof[], int n)</div>
+                    <div class="card-fn-desc">Exibe a tabela de predecessores: quem enviou a mensagem para cada nó e em quantos saltos.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Itera por todos os nós e, para cada um que foi alcançado (<code>prof[i] >= 0</code>), imprime uma linha formatada mostrando: o ID do nó, quem foi seu predecessor (ou <code>-- (fonte)</code> se for a raiz) e o número de saltos.</p>
+            </div>
+        </div>
+
+        <div id="imprimir_arvore" class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void imprimir_arvore(Grafo *g, int src, int pai[], int prof[])</div>
+                    <div class="card-fn-desc">Desenha visualmente a árvore geradora de transmissão com símbolos ├── e └──, igual ao comando <code>tree</code> do Linux.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Chama a função estática auxiliar <code>imprimir_sub</code>, que é <strong>recursiva</strong>. A cada nível da recursão, ela:</p>
+                <p>1. Coleta os filhos do nó atual (aqueles cujo <code>pai[i] == raiz</code> e <code>prof[i] == prof[raiz] + 1</code>).</p>
+                <p>2. Para cada filho, imprime o <strong>prefixo acumulado</strong> de espaçamento e o galho (<code>├──</code> ou <code>└──</code> para o último filho).</p>
+                <p>3. Calcula o novo prefixo para a próxima chamada: se o filho não for o último, adiciona <code>│   </code> (cano reto) para que os filhos dos próximos irmãos sejam conectados visualmente; se for o último, adiciona espaços em branco.</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-block-lang">saída do terminal</span></div>
+                    <pre style="color: #8b949e">P0  ★ fonte
+├── P1  (salto 1, 12ms)
+│   ├── P3  (salto 2, 8ms)
+│   │   └── P5  (salto 3, 15ms)
+│   └── P4  (salto 2, 30ms)
+│       └── P6  (salto 3, 22ms)
+└── P2  (salto 1, 45ms)</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Union-Find -->
+    <section id="uf">
+        <h2 class="section-title"><span class="icon">🔍</span> Módulo — Union-Find</h2>
+        <div class="section-divider"></div>
+        <p class="section-desc">O Union-Find (Conjuntos Disjuntos) é usado para detectar quais computadores ainda pertencem ao mesmo grupo de comunicação após quedas de conexão. Ele utiliza duas otimizações clássicas: <strong>Compressão de Caminho</strong> e <strong>União por Rank</strong>.</p>
+
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void uf_inicializar(int *parent, int *rank, int n)</div>
+                    <div class="card-fn-desc">Estado inicial: cada nó é seu próprio "chefe supremo", sem grupos formados.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Define <code>parent[i] = i</code> para todos os nós. Nesse ponto, existem <code>n</code> grupos isolados. O <code>rank[i] = 0</code> indica que nenhum grupo tem profundidade ainda. Os grupos só se formam quando <code>uf_unite</code> é chamado.</p>
+            </div>
+        </div>
+
+        <div class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">int uf_find(int *parent, int x)</div>
+                    <div class="card-fn-desc">Descobre o "chefe supremo" (raiz) do grupo ao qual o nó x pertence, com compressão de caminho.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Sobe na hierarquia de <code>parent</code> de forma recursiva até encontrar um nó que é pai de si mesmo (a raiz do grupo). Na volta da recursão, <strong>atualiza todos os nós do caminho para apontar diretamente para a raiz</strong> — isso é a compressão de caminho. Com isso, consultas futuras se tornam praticamente O(1).</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span class="code-block-lang">c</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+                    <pre><span class="kw">int</span> <span class="fn">uf_find</span>(<span class="kw">int</span> *parent, <span class="kw">int</span> x) {
+    <span class="kw">if</span> (parent[x] != x)
+        parent[x] = <span class="fn">uf_find</span>(parent, parent[x]); <span class="cm">// compressão</span>
+    <span class="kw">return</span> parent[x];
+}</pre>
+                </div>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Amortizado: <span>O(α(n)) ≈ O(1)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">void uf_unite(int *parent, int *rank, int a, int b)</div>
+                    <div class="card-fn-desc">Une os grupos de dois nós. O grupo de menor "rank" se torna subordinado ao maior, evitando árvores degeneradas.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Encontra as raízes dos dois grupos com <code>uf_find</code>. Se já forem a mesma, não faz nada. Caso contrário, faz a união: o grupo com menor <code>rank</code> vira filho do grupo maior. Se os ranks forem iguais, qualquer um pode virar filho, mas o rank do pai é incrementado. Isso é a <strong>União por Rank</strong>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- detectar_componentes -->
+    <section id="detectar">
+        <div class="card open" onclick="toggleCard(this)">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="card-fn-name">int detectar_componentes(Grafo *g)</div>
+                    <div class="card-fn-desc">Usa o Union-Find para varrer todas as arestas do grafo e identificar grupos de computadores isolados.</div>
+                </div>
+                <div class="card-toggle">▶</div>
+            </div>
+            <div class="card-body">
+                <p>Aloca arrays de <code>parent</code> e <code>rank</code> dinamicamente. Inicializa o Union-Find e percorre todas as arestas do grafo chamando <code>uf_unite</code> para cada par conectado. Ao final, conta quantos nós são "raízes" do próprio grupo (<code>uf_find(parent, i) == i</code>): esse é o número exato de componentes conexos.</p>
+                <p>Exibe cada componente com seus membros e um alerta se a rede estiver fragmentada (<code>num_comp > 1</code>).</p>
+                <div class="params-title">Retorno</div>
+                <table class="params-table">
+                    <tr><th>Tipo</th><th>Descrição</th></tr>
+                    <tr><td>int</td><td>Número de componentes conexos encontrados (1 = rede íntegra, >1 = rede fragmentada)</td></tr>
+                </table>
+                <div class="complexity-row">
+                    <div class="complexity-badge time">⏱ Tempo: <span>O(E · α(V))</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu -->
+    <section id="menu">
+        <h2 class="section-title"><span class="icon">🎮</span> Módulo — Menu interativo (main.c)</h2>
+        <div class="section-divider"></div>
+        <p class="section-desc">O <code>main.c</code> funciona como um painel de controle em loop contínuo. Ao escolher a opção 2 ou 3 (broadcasts), o programa <strong>sempre exibe a análise de componentes conexos antes de disparar</strong>, permitindo visualizar se há ilhas de computadores inacessíveis.</p>
+        <div class="menu-grid">
+            <div class="menu-item">
+                <div class="menu-key">1</div>
+                <div class="menu-desc">
+                    <strong>Visualizar rede</strong>
+                    <p>Exibe a topologia completa com todos os computadores e suas conexões</p>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-key">2</div>
+                <div class="menu-desc">
+                    <strong>Broadcast BFS</strong>
+                    <p>Solicita nó de origem, checa componentes e dispara em largura</p>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-key">3</div>
+                <div class="menu-desc">
+                    <strong>Broadcast DFS</strong>
+                    <p>Solicita nó de origem, checa componentes e dispara em profundidade</p>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-key">4</div>
+                <div class="menu-desc">
+                    <strong>Desconectar</strong>
+                    <p>Remove a aresta entre dois nós, simulando queda de link</p>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-key">5</div>
+                <div class="menu-desc">
+                    <strong>Verificar integridade</strong>
+                    <p>Exibe os componentes conexos e alerta sobre fragmentações</p>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-key">0</div>
+                <div class="menu-desc">
+                    <strong>Sair</strong>
+                    <p>Libera a memória e encerra o programa</p>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-tip">
+            <span class="alert-icon">💡</span>
+            <p><strong>Sugestão de demonstração:</strong> Use a opção 4 para remover as conexões P1↔P3 e P4↔P6. Em seguida, use a opção 5 para ver o Union-Find identificar os componentes isolados em tempo real!</p>
+        </div>
+    </section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+    // ── Sidebar toggle (mobile) ──
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    document.addEventListener('click', e => {
+        const sidebar = document.getElementById('sidebar');
+        const hamburger = document.getElementById('hamburger');
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    });
+
+    // ── Card toggle ──
+    function toggleCard(card) {
+        if (event.target.closest('.copy-btn') || event.target.closest('pre')) return;
+        card.classList.toggle('open');
+    }
+
+    // ── Copy code ──
+    function copyCode(btn) {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        navigator.clipboard.writeText(pre.innerText);
+        btn.textContent = 'Copiado!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1500);
+    }
+
+    // ── Back to top ──
+    const backBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+        backBtn.classList.toggle('visible', window.scrollY > 400);
+    });
+
+    // ── Active nav link ──
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('nav a');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                const match = document.querySelector(`nav a[href="#${e.target.id}"]`);
+                if (match) match.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+
+    // ── Topology Canvas ──
+    const nodes = [
+        { id: 0, x: 200, y: 160 },
+        { id: 1, x: 360, y: 80  },
+        { id: 2, x: 360, y: 260 },
+        { id: 3, x: 520, y: 40  },
+        { id: 4, x: 520, y: 200 },
+        { id: 5, x: 660, y: 100 },
+        { id: 6, x: 660, y: 260 },
+    ];
+    const edges = [
+        { a: 0, b: 1, lat: 12 },
+        { a: 0, b: 2, lat: 45 },
+        { a: 1, b: 3, lat:  8 },
+        { a: 1, b: 4, lat: 30 },
+        { a: 2, b: 4, lat: 20 },
+        { a: 3, b: 5, lat: 15 },
+        { a: 4, b: 6, lat: 22 },
+        { a: 5, b: 6, lat: 10 },
+    ];
+
+    const canvas = document.getElementById('topo-canvas');
+    const ctx = canvas.getContext('2d');
+    let dragging = null, offsetX = 0, offsetY = 0;
+
+    function drawGraph() {
+        canvas.width = canvas.offsetWidth;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Edges
+        edges.forEach(e => {
+            const a = nodes[e.a], b = nodes[e.b];
+            const scale = canvas.width / 800;
+            const ax = a.x * scale, ay = a.y * scale, bx = b.x * scale, by = b.y * scale;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Lat label
+            const mx = (ax + bx) / 2, my = (ay + by) / 2;
+            ctx.fillStyle = '#d29922';
+            ctx.font = `${11 * scale}px JetBrains Mono, monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(e.lat + 'ms', mx, my - 5 * scale);
+        });
+
+        // Nodes
+        nodes.forEach(n => {
+            const scale = canvas.width / 800;
+            const x = n.x * scale, y = n.y * scale, r = 20 * scale;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#1c2128';
+            ctx.fill();
+            ctx.strokeStyle = '#58a6ff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#58a6ff';
+            ctx.font = `bold ${13 * scale}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('P' + n.id, x, y);
+        });
+    }
+
+    function getNode(mx, my) {
+        const scale = canvas.width / 800;
+        return nodes.find(n => {
+            const dx = n.x * scale - mx, dy = n.y * scale - my;
+            return Math.sqrt(dx*dx + dy*dy) < 22 * scale;
+        });
+    }
+
+    canvas.addEventListener('mousedown', e => {
+        const r = canvas.getBoundingClientRect();
+        const scale = canvas.width / 800;
+        dragging = getNode(e.clientX - r.left, e.clientY - r.top);
+        if (dragging) {
+            offsetX = e.clientX - r.left - dragging.x * scale;
+            offsetY = e.clientY - r.top - dragging.y * scale;
+        }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const r = canvas.getBoundingClientRect();
+        const scale = canvas.width / 800;
+        dragging.x = (e.clientX - r.left - offsetX) / scale;
+        dragging.y = (e.clientY - r.top - offsetY) / scale;
+        drawGraph();
+    });
+
+    canvas.addEventListener('mouseup', () => dragging = null);
+
+    // Touch
+    canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+        const scale = canvas.width / 800;
+        dragging = getNode(t.clientX - r.left, t.clientY - r.top);
+        if (dragging) {
+            offsetX = t.clientX - r.left - dragging.x * scale;
+            offsetY = t.clientY - r.top - dragging.y * scale;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (!dragging) return;
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+        const scale = canvas.width / 800;
+        dragging.x = (t.clientX - r.left - offsetX) / scale;
+        dragging.y = (t.clientY - r.top - offsetY) / scale;
+        drawGraph();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => dragging = null);
+
+    window.addEventListener('resize', drawGraph);
+    drawGraph();
+</script>
+</body>
+</html>
